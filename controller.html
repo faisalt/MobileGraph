@@ -1,7 +1,14 @@
+<!--
+* Controller code for the mobile bar chart using ShapeClips
+* Here we can carry out operations such as calibration, uploading CSV files, etc.
+* Useful for controlling what's on the 'client' interface 
+*
+* @author Faisal T
+*
+-->
 <!doctype html>
 <head>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-	<script src="http://localhost:3000/socket.io/socket.io.js"></script>
 	<script src="JavaScript/jquery.csv-0.71.js"></script>
 	<link rel=StyleSheet href="Style/style.css" type="text/css">
 </head>
@@ -35,27 +42,38 @@
 </html>
 
 <script type="text/javascript">
-var conn = io.connect('ws://localhost:3000/');
-$(document).ready(function() {
-	conn.on('connect', function(data) {
-		console.log("Controller Connection Established!");
-	});
-	$('button#sendTestMessage').click(function() {
-		if($('input#testmessage').val() != "") {
-			conn.emit("clientTestMsg", $('input#testmessage').val());
-			$('input#testmessage').val('');
-		}
-	});
-	
-	$('button#allBlack').click(function() {
-		conn.emit("requestingAllBlack", "black");
-	});
-	$('button#allWhite').click(function() {
-		conn.emit("requestingAllWhite", "white");
-	});
-	
-	rainfallParser();
+
+var conn="";
+/*
+* When document loads, make sure to load the config script, followed by the socket.js script. 
+* Once this is completed, run socket based code, otherwise it won't work.
+*/
+$(document).ready(function() {	
+	$.getScript('config.js').done(function(script, textStatus){
+		$.getScript('ws://'+host+':'+port+'/socket.io/socket.io.js').done(function(script, textStatus){ 
+			conn = io.connect('ws://'+host+':'+port+'/');
+			conn.on('connect', function(data) {
+				console.log("Controller Connection Established!");
+			});
+			$('button#sendTestMessage').click(function() {
+				if($('input#testmessage').val() != "") {
+					conn.emit("clientTestMsg", $('input#testmessage').val());
+					$('input#testmessage').val('');
+				}
+			});
+			
+			$('button#allBlack').click(function() {
+				conn.emit("requestingAllBlack", "black");
+			});
+			$('button#allWhite').click(function() {
+				conn.emit("requestingAllWhite", "white");
+			});
+			
+			rainfallParser();
+		});		
+	});	
 });
+//Send data to the server, e.g. to be sent to clients
 function sendRequest(data) {
 	var strJSON = [{"pixel_id": "1", "pixel_value":"10"}, {"pixel_id":"2", "pixel_value":"20"}, {"pixel_id":"4", "pixel_value":"100"},{"pixel_id":"5", "pixel_value":"100"}];
 	var mydata = JSON.stringify(strJSON);
