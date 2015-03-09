@@ -1,0 +1,203 @@
+<!--
+* Shows pixels to control the shapeclip heights, e.g. by mapping values from a dataset
+*
+* @author Faisal T
+*
+-->
+<!doctype html>
+<head>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+	<script type="text/javascript" src="JavaScript/ShapeClipAPI.js"></script>
+	<link rel=StyleSheet href="Style/style.css" type="text/css">
+</head>
+<body>
+	<div class="horizontal_axis">
+	</div>
+	<div class="vertical_axis">
+	</div>
+	<div class="PXGrid"></div>
+	<div class="buttons">
+		<button id="previous">Prev</button>
+		<button id="next">Next</button>
+		<button onclick="location.reload();" id="refresh">Refresh</button>
+	</div>
+</body>
+</html>
+<script type="text/javascript">
+
+var conn="";
+var pageCounter=0;
+
+$(document).ready(function() {
+	$.getScript('config.js').done(function(script, textStatus){
+		$.getScript('http://'+host+':'+port+'/socket.io/socket.io.js').done(function(script, textStatus){ 
+		conn = io.connect('ws://'+host+':'+port+'/');
+			createGrid();
+			generateHorizontalLabels();
+			generateVerticalLabels();
+		});
+	});	
+});
+
+function mapValues(pads, values, pagination) {
+	var count=0;
+	var yearArray = new Array();
+	generateVerticalLabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']);
+	for(var i=pagination; i<pagination+5; i++) {
+		pads[count++].height(values['RainfallVals'][i].JAN*0.01);
+		pads[count++].height(values['RainfallVals'][i].FEB*0.01);
+		pads[count++].height(values['RainfallVals'][i].MAR*0.01);
+		pads[count++].height(values['RainfallVals'][i].APR*0.01);
+		pads[count++].height(values['RainfallVals'][i].MAY*0.01);
+		pads[count++].height(values['RainfallVals'][i].JUN*0.01);
+		yearArray.push(values['RainfallVals'][i].Year);
+	}
+	generateHorizontalLabels(yearArray);
+}
+/*
+* Generate labels across the horizontal axis
+*
+* @data the label data
+*/
+function generateHorizontalLabels(data) {
+	$('div.horizontal_axis').empty();
+	for(var i=0; i<5; i++) { 
+		if(data == null) $('div.horizontal_axis').append("<label id='val"+i+"'>Val_"+i+"</label>"); 
+		else {
+			$('div.horizontal_axis').append("<label id='val"+i+"'>"+data[i]+"</label>");
+		}
+	}
+}
+/*
+* Generate labels across the vertical axis
+*
+* @data the label data
+*/
+function generateVerticalLabels(data) {
+	$('div.vertical_axis').empty();
+	for(var i=0; i<6; i++) { 
+		if(data == null) $('div.vertical_axis').append("<label id='val1'>Val_"+i+"</label>"); 
+		else {
+			$('div.vertical_axis').append("<label id='val1'>"+data[i]+"</label>"); 
+		}
+	}
+}
+
+function createGrid() {
+	var x=1;
+	var y=1;
+	var count=1;
+	var pads = [];
+	// Correct ppi value.
+	var agent = navigator.userAgent.toLowerCase();
+	if 		(agent.indexOf("windows") 	!= -1) 	{ }
+	if 		(agent.indexOf("nexus 5") 	!= -1) 	{ __ppi(150); }
+	else if (agent.indexOf("ipad") 		!= -1) 	{ __ppi(160); }
+	else if (agent.indexOf("nexus 10") 		!= -1) 	{ __ppi(180); }
+	console.log("User Agent: " + navigator.userAgent.toLowerCase());
+	
+	//__ppi(180); //manually set for the nexus 10 tablet - need to automate this
+	
+	// The size of the shape-clip pad in mm.
+	var SC_SIZE = __px(20);
+	// The starting position of the grid
+	var X = 19;	var Y = 25;
+	
+	for (var x = 0; x < 5; ++x) {
+		for (var y = 0; y < 6; ++y) {
+			var pX = X + (x * 25); // 29 -- horizontal spacing between pixels
+			var pY = Y + (y * 26); // 33 -- vertical spacing between pixels
+			
+			var pad = null;
+			pad = new ShapeClip({x: __px(pX), y: __px(pY), width: SC_SIZE, height: SC_SIZE});
+			
+			//pad._id = "" + x + "x" + y;
+			pad._id="pixel_"+count;
+			count++;
+			pad.outline(true);
+			pad.rotate(180);
+			pads.push(pad);
+			
+		}
+	}
+	conn.on('connect', function(data) {
+		console.log("Chart Client Connection Established!");
+	});
+	conn.on("serverMsg", function(data) {
+		console.log("Broadcasted server message:"); 		
+		var colorArray = getRandomColor(6);
+		for(var i=0; i<6; i++) {
+			pads[i].colour(colorArray[i].r, colorArray[i].g, colorArray[i].b);
+			pads[i+6].colour(colorArray[i].r, colorArray[i].g, colorArray[i].b);
+			pads[i+12].colour(colorArray[i].r, colorArray[i].g, colorArray[i].b);
+			pads[i+18].colour(colorArray[i].r, colorArray[i].g, colorArray[i].b);
+			pads[i+24].colour(colorArray[i].r, colorArray[i].g, colorArray[i].b);
+		}
+		for (var i=0; i<pads.length; ++i) { pads[i].pulse(); }
+		var obj = JSON.parse(data);
+		mapValues(pads, obj, pageCounter);
+		//Cycle through graph data
+		$('button#previous').click(function() {
+			if(pageCounter>0) pageCounter--;
+			mapValues(pads, obj, pageCounter);
+		});
+		$('button#next').click(function() {
+			if(pageCounter<10) pageCounter++;
+			mapValues(pads, obj, pageCounter);
+		});
+	});	
+	//Test message from server (for handshake purposes)
+	conn.on("serverTestMsg", function(data) {
+		alert("Controller has sent a message: "+data);
+	});
+	//The ShapeClips need to know the limits of black/white
+	conn.on("calibrationRequest", function(data) {
+		for (var i=0; i<pads.length; ++i) { pads[i].stopPulse(); }
+		if(data == "white") {
+			for (var i=0; i<pads.length; ++i) { pads[i]._ldr1(1);pads[i]._ldr2(1); }
+		}
+		else if(data == "black") {
+			for (var i=0; i<pads.length; ++i) { pads[i]._ldr1(0);pads[i]._ldr2(0); }
+		}
+	});
+}
+/*
+* Generate a random and unique RGB colour array
+*
+* @param rownum the number of rows that need random colours (each row is a different colour)
+*/
+function getRandomColor(rownum) {
+	var colorarray = new Array();
+	var count=0;
+	var tempColor="";
+	while(count < rownum) {
+		for(var i=0; i<rownum; i++) {
+			var letters = '0123456789ABCDEF'.split('');
+			var color = '#';
+			for (var i = 0; i < 6; i++ ) {
+				color += letters[Math.floor(Math.random() * 16)];
+			}
+			color = hexToRgb(color);
+			if(color != tempColor) {
+				colorarray.push(color);
+				count++;
+			}
+			tempColor = color;
+		}
+	}
+    return colorarray;
+}
+/*
+* Convert a hexadecmial value to an RGB array
+*
+* @param hex the hexadecmial value
+*/
+function hexToRgb(hex) {
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+}
+</script>

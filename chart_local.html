@@ -1,0 +1,160 @@
+<!--
+* Shows pixels to control the shapeclip heights, e.g. by mapping values from a dataset
+*
+* @author Faisal T
+*
+-->
+<!doctype html>
+<head>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+	<script type="text/javascript" src="JavaScript/ShapeClipAPI.js"></script>
+	<script src="config.js"></script>
+	<script src="http://localhost:3000/socket.io/socket.io.js"></script>
+	<link rel=StyleSheet href="Style/style.css" type="text/css">
+</head>
+<body>
+	<div class="PXGrid"></div>
+	<div class="buttons">
+		<button id="previous">Prev</button>
+		<button id="next">Next</button>
+	</div>
+</body>
+</html>
+<script type="text/javascript">
+$(document).ready(function() {
+	//setupSocketConnection();
+	createGrid();
+	var arr = getRandomColor(5);
+	console.log(arr[0].r);
+	//refreshPixelSquares();
+});
+function mapValues(pads, values, pagination) {
+	var count=0;
+	for(var i=pagination; i<pagination+5; i++) {
+		pads[count++].height(values['RainfallVals'][i].JAN*0.01);
+		pads[count++].height(values['RainfallVals'][i].FEB*0.01);
+		pads[count++].height(values['RainfallVals'][i].MAR*0.01);
+		pads[count++].height(values['RainfallVals'][i].APR*0.01);
+		pads[count++].height(values['RainfallVals'][i].MAY*0.01);
+		pads[count++].height(values['RainfallVals'][i].JUN*0.01);
+		//pads[count++].height(values['RainfallVals'][i].JUL*0.01);
+		//pads[count++].height(values['RainfallVals'][i].AUG*0.01);
+	}
+}
+var conn="";
+//Create a grid
+var pageCounter=0;
+function createGrid() {
+	var x=1;
+	var y=1;
+	var count=1;
+	var pads = [];
+	// Correct ppi value.
+	var agent = navigator.userAgent.toLowerCase();
+	if 		(agent.indexOf("windows") 	!= -1) 	{ }
+	if 		(agent.indexOf("nexus 5") 	!= -1) 	{ __ppi(150); }
+	else if (agent.indexOf("ipad") 		!= -1) 	{ __ppi(160); }
+	else if (agent.indexOf("nexus 10") 		!= -1) 	{ __ppi(300); }
+	console.log("User Agent: " + navigator.userAgent.toLowerCase());
+	// The size of the shape-clip pad in mm.
+	var SC_SIZE = __px(20);
+	// The starting position of the grid
+	var X = 18;	var Y = 25;
+	
+	for (var x = 0; x < 5; ++x) {
+		for (var y = 0; y < 6; ++y) {
+			var pX = X + (x * 25); // 29 -- horizontal spacing between pixels
+			var pY = Y + (y * 26); // 33 -- vertical spacing between pixels
+			
+			var pad = null;
+			pad = new ShapeClip({x: __px(pX), y: __px(pY), width: SC_SIZE, height: SC_SIZE});
+			
+			//pad._id = "" + x + "x" + y;
+			pad._id="pixel_"+count;
+			count++;
+			pad.outline(true);
+			pad.rotate(180);
+			pads.push(pad);
+			
+		}
+	}
+	//for (var i=0; i<pads.length; ++i) { pads[i].pulse(); }
+	for (var i=0; i<pads.length; ++i) { pads[i].colour(0, 0, 255); }
+	
+	/*var colorArray = getRandomColor(6);
+		
+		for(var i=0; i<6; i++) {
+			pads[i].colour(colorArray[i].r, colorArray[i].g, colorArray[i].b);
+			pads[i+6].colour(colorArray[i].r, colorArray[i].g, colorArray[i].b);
+			pads[i+12].colour(colorArray[i].r, colorArray[i].g, colorArray[i].b);
+			pads[i+18].colour(colorArray[i].r, colorArray[i].g, colorArray[i].b);
+			pads[i+24].colour(colorArray[i].r, colorArray[i].g, colorArray[i].b);
+		}*/
+	
+	conn = io.connect(protocol+"localhost"+':'+port+'/');
+	conn.on('connect', function(data) {
+		console.log("Chart Client Connection Established!");
+	});
+	conn.on("serverMsg", function(data) {
+		console.log("Broadcasted server message:");
+		var obj = JSON.parse(data);
+		console.log(obj);
+		
+		mapValues(pads, obj, pageCounter);
+		$('button#previous').click(function() {
+			if(pageCounter>0) pageCounter--;
+			mapValues(pads, obj, pageCounter);
+		});
+		$('button#next').click(function() {
+			if(pageCounter<10) pageCounter++;
+			mapValues(pads, obj, pageCounter);
+		});
+	});	
+	conn.on("serverTestMsg", function(data) {
+		alert("Controller has sent a message: "+data);
+	});
+	conn.on("calibrationRequest", function(data) {
+		for (var i=0; i<pads.length; ++i) { pads[i].stopPulse(); }
+		if(data == "white") {
+			$('body').css('background-color', 'white');
+		}
+		else if(data == "black") {
+			for (var i=0; i<pads.length; ++i) { pads[i].height(0); }
+		}
+	});
+}
+/*
+* Get random colour for the different rows of the chart
+*
+* NEED TO COMPLETE, ideally return an array with rownum number of UNIQUE colours
+*/
+function getRandomColor(rownum) {
+	var colorarray = new Array();
+	var count=0;
+	var tempColor="";
+	while(count < rownum) {
+		for(var i=0; i<rownum; i++) {
+			var letters = '0123456789ABCDEF'.split('');
+			var color = '#';
+			for (var i = 0; i < 6; i++ ) {
+				color += letters[Math.floor(Math.random() * 16)];
+			}
+			color = hexToRgb(color);
+			if(color != tempColor) {
+				colorarray.push(color);
+				count++;
+			}
+			tempColor = color;
+		}
+	}
+    return colorarray;
+}
+function hexToRgb(hex) {
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+}
+</script>

@@ -1,0 +1,82 @@
+<!--
+* Shows pixels to control the shapeclip heights, e.g. by mapping values from a dataset
+*
+* @author Faisal T
+*
+-->
+<!doctype html>
+<head>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+	<script type="text/javascript" src="JavaScript/ShapeClipAPI.js"></script>
+	<script src="config.js"></script>
+	<script src="http://localhost:3000/socket.io/socket.io.js"></script>
+	<link rel=StyleSheet href="Style/style.css" type="text/css">
+</head>
+<body>
+
+</body>
+</html>
+<script type="text/javascript">
+$(document).ready(function() {
+	//setupSocketConnection();
+	createGrid();
+	//refreshPixelSquares();
+});
+function mapValues(pads, values, pagination) {
+	var count=0;
+	for(var i=pagination; i<pagination+5; i++) {
+		pads[count++].height(values['RainfallVals'][i].JAN*0.01);
+		pads[count++].height(values['RainfallVals'][i].FEB*0.01);
+		pads[count++].height(values['RainfallVals'][i].MAR*0.01);
+		pads[count++].height(values['RainfallVals'][i].APR*0.01);
+		pads[count++].height(values['RainfallVals'][i].MAY*0.01);
+		pads[count++].height(values['RainfallVals'][i].JUN*0.01);
+		//pads[count++].height(values['RainfallVals'][i].JUL*0.01);
+		//pads[count++].height(values['RainfallVals'][i].AUG*0.01);
+	}
+}
+var conn="";
+//Create a grid
+var pageCounter=0;
+function createGrid() {
+	var x=1;
+	var y=1;
+	var count=1;
+	var pads = [];
+	// Correct ppi value.
+	var agent = navigator.userAgent.toLowerCase();
+	if 		(agent.indexOf("windows") 	!= -1) 	{ }
+	if 		(agent.indexOf("nexus 5") 	!= -1) 	{ __ppi(150); }
+	else if (agent.indexOf("ipad") 		!= -1) 	{ __ppi(160); }
+	else if (agent.indexOf("nexus 10") 		!= -1) 	{ __ppi(300); }
+	console.log("User Agent: " + navigator.userAgent.toLowerCase());
+	__ppi(180);
+	// The size of the shape-clip pad in mm.
+	var SC_SIZE = __px(20);
+	// The starting position of the grid
+	var X = 18;	var Y = 25;
+	
+	for (var x = 0; x < 2; ++x) {
+		for (var y = 0; y < 2; ++y) {
+			var pX = X + (x * 25); // 29 -- horizontal spacing between pixels
+			var pY = Y + (y * 26); // 33 -- vertical spacing between pixels
+			
+			var pad = null;
+			pad = new ShapeClipSerial({x: __px(pX), y: __px(pY), width: SC_SIZE, height: SC_SIZE});
+			
+			//pad._id = "" + x + "x" + y;
+			pad._id="pixel_"+count;
+			count++;
+			pad.outline(true);
+			pad.rotate(180);
+			pads.push(pad);
+			
+		}
+	}
+	
+	for (var i=0; i<pads.length; ++i) pads[i].pulse();
+	for(var i=0; i<pads.length;++i) pads[i].send(["R",0xFF,"X"])
+	for(var i=0; i<pads.length;++i) pads[i].send(["H",0xFF,"X"])
+}
+
+</script>
