@@ -32,64 +32,19 @@ var v_pageCounter=0;
 
 $(document).ready(function() {
 	$.getScript('config.js').done(function(script, textStatus){
+		//$.getScript('http://'+host+':'+port+'/socket.io/socket.io.js').done(function(script, textStatus){ 
+		//conn = io.connect('ws://'+host+':'+port+'/');
 		conn = io.connect('ws://localhost:'+port+'/');
 			createGrid();
 			//generateHorizontalLabels();
 			//generateVerticalLabels();
-		});
+	});
+	//});
 });
 
 /*
-* Maps the values sent from the controller (i.e. height values, etc.) to the bar chart interface
-*
-* @param pads
-* @param values
-* @param h_pagination
-* @param v_pagination
-* @param h_limit
-* @param v_limit
+* This creates the pixel grid that controls the ShapeClips
 */
-function mapValues(pads, values, h_pagination, v_pagination, h_limit, v_limit) {
-	var count=0;
-	var yearArray = new Array();
-	//generateVerticalLabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']);
-	for(var i=h_pagination; i<h_pagination+h_limit; i++) {
-		for(var j=v_pagination+1; j<(v_pagination+1)+v_limit; j++) {
-			pads[count++].height(values[i][j]*0.01);
-		}
-	}
-	//generateHorizontalLabels(yearArray);
-}
-
-/*
-* Generate labels across the horizontal axis
-*
-* @data the label data
-*/
-function generateHorizontalLabels(data) {
-	$('div.horizontal_axis').empty();
-	for(var i=0; i<5; i++) { 
-		if(data == null) $('div.horizontal_axis').append("<label id='val"+i+"'>Val_"+i+"</label>"); 
-		else {
-			$('div.horizontal_axis').append("<label id='val"+i+"'>"+data[i]+"</label>");
-		}
-	}
-}
-/*
-* Generate labels across the vertical axis
-*
-* @data the label data
-*/
-function generateVerticalLabels(data) {
-	$('div.vertical_axis').empty();
-	for(var i=0; i<6; i++) { 
-		if(data == null) $('div.vertical_axis').append("<label id='val1'>Val_"+i+"</label>"); 
-		else {
-			$('div.vertical_axis').append("<label id='val1'>"+data[i]+"</label>"); 
-		}
-	}
-}
-
 function createGrid() {
 	var x=1;
 	var y=1;
@@ -125,6 +80,11 @@ function createGrid() {
 			
 		}
 	}
+	/*
+	* -------------------------------------------------	
+	* ----------- WebSocket handlers ------------------
+	* -------------------------------------------------
+	*/
 	conn.on('connect', function(data) {
 		console.log("Chart Client Connection Established!");
 	});
@@ -177,6 +137,59 @@ function createGrid() {
 		}
 	});
 }
+
+/*
+* Maps the values sent from the controller (i.e. height values, etc.) to the bar chart interface
+*
+* @param pads
+* @param values
+* @param h_pagination
+* @param v_pagination
+* @param h_limit
+* @param v_limit
+*/
+function mapValues(pads, values, h_pagination, v_pagination, h_limit, v_limit) {
+	var count=0;
+	var yearArray = new Array();
+	//generateVerticalLabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']);
+	for(var i=h_pagination; i<h_pagination+h_limit; i++) {
+		for(var j=v_pagination+1; j<(v_pagination+1)+v_limit; j++) {
+			pads[count++].height(values[i][j]*0.01);
+		}
+	}
+	//generateHorizontalLabels(yearArray);
+}
+
+/*
+* Generate labels across the horizontal axis
+*
+* @data the label data
+*/
+function generateHorizontalLabels(data) {
+	$('div.horizontal_axis').empty();
+	for(var i=0; i<5; i++) { 
+		if(data == null) $('div.horizontal_axis').append("<label id='val"+i+"'>Val_"+i+"</label>"); 
+		else {
+			$('div.horizontal_axis').append("<label id='val"+i+"'>"+data[i]+"</label>");
+		}
+	}
+}
+
+/*
+* Generate labels across the vertical axis
+*
+* @data the label data
+*/
+function generateVerticalLabels(data) {
+	$('div.vertical_axis').empty();
+	for(var i=0; i<6; i++) { 
+		if(data == null) $('div.vertical_axis').append("<label id='val1'>Val_"+i+"</label>"); 
+		else {
+			$('div.vertical_axis').append("<label id='val1'>"+data[i]+"</label>"); 
+		}
+	}
+}
+
 /*
 * Generate a random and unique RGB colour array
 *
@@ -203,6 +216,7 @@ function getRandomColor(rownum) {
 	}
     return colorarray;
 }
+
 /*
 * Convert a hexadecmial value to an RGB array
 *

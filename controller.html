@@ -50,7 +50,7 @@ var conn="";
 */
 $(document).ready(function() {	
 	$.getScript('config.js').done(function(script, textStatus){
-		$.getScript('ws://'+host+':'+port+'/socket.io/socket.io.js').done(function(script, textStatus){ 
+		$.getScript('http://'+host+':'+port+'/socket.io/socket.io.js').done(function(script, textStatus){ 
 			conn = io.connect('ws://'+host+':'+port+'/');
 			conn.on('connect', function(data) {
 				console.log("Controller Connection Established!");

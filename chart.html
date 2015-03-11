@@ -26,34 +26,42 @@
 <script type="text/javascript">
 
 var conn="";
-var pageCounter=0;
+var h_pageCounter=0;
+var v_pageCounter=0;
 
 $(document).ready(function() {
 	$.getScript('config.js').done(function(script, textStatus){
 		$.getScript('http://'+host+':'+port+'/socket.io/socket.io.js').done(function(script, textStatus){ 
-		conn = io.connect('ws://'+host+':'+port+'/');
+			conn = io.connect('ws://'+host+':'+port+'/');
 			createGrid();
-			generateHorizontalLabels();
-			generateVerticalLabels();
+			//generateHorizontalLabels();
+			//generateVerticalLabels();
 		});
-	});	
+	});
 });
 
-function mapValues(pads, values, pagination) {
+/*
+* Maps the values sent from the controller (i.e. height values, etc.) to the bar chart interface
+*
+* @param pads
+* @param values
+* @param h_pagination
+* @param v_pagination
+* @param h_limit
+* @param v_limit
+*/
+function mapValues(pads, values, h_pagination, v_pagination, h_limit, v_limit) {
 	var count=0;
 	var yearArray = new Array();
 	generateVerticalLabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']);
-	for(var i=pagination; i<pagination+5; i++) {
-		pads[count++].height(values['RainfallVals'][i].JAN*0.01);
-		pads[count++].height(values['RainfallVals'][i].FEB*0.01);
-		pads[count++].height(values['RainfallVals'][i].MAR*0.01);
-		pads[count++].height(values['RainfallVals'][i].APR*0.01);
-		pads[count++].height(values['RainfallVals'][i].MAY*0.01);
-		pads[count++].height(values['RainfallVals'][i].JUN*0.01);
-		yearArray.push(values['RainfallVals'][i].Year);
+	for(var i=h_pagination; i<h_pagination+h_limit; i++) {
+		for(var j=v_pagination+1; j<(v_pagination+1)+v_limit; j++) {
+			pads[count++].height(values[i][j]*0.01);
+		}
 	}
-	generateHorizontalLabels(yearArray);
+	//generateHorizontalLabels(yearArray);
 }
+
 /*
 * Generate labels across the horizontal axis
 *
@@ -94,9 +102,7 @@ function createGrid() {
 	if 		(agent.indexOf("nexus 5") 	!= -1) 	{ __ppi(150); }
 	else if (agent.indexOf("ipad") 		!= -1) 	{ __ppi(160); }
 	else if (agent.indexOf("nexus 10") 		!= -1) 	{ __ppi(180); }
-	console.log("User Agent: " + navigator.userAgent.toLowerCase());
-	
-	//__ppi(180); //manually set for the nexus 10 tablet - need to automate this
+	console.log("User Agent: " + agent);
 	
 	// The size of the shape-clip pad in mm.
 	var SC_SIZE = __px(20);
@@ -124,32 +130,43 @@ function createGrid() {
 		console.log("Chart Client Connection Established!");
 	});
 	conn.on("serverMsg", function(data) {
-		console.log("Broadcasted server message:"); 		
-		var colorArray = getRandomColor(6);
-		for(var i=0; i<6; i++) {
-			pads[i].colour(colorArray[i].r, colorArray[i].g, colorArray[i].b);
-			pads[i+6].colour(colorArray[i].r, colorArray[i].g, colorArray[i].b);
-			pads[i+12].colour(colorArray[i].r, colorArray[i].g, colorArray[i].b);
-			pads[i+18].colour(colorArray[i].r, colorArray[i].g, colorArray[i].b);
-			pads[i+24].colour(colorArray[i].r, colorArray[i].g, colorArray[i].b);
+		console.log("Broadcasted server message:");	
+		
+		//Set unique colours for each row so they are distinguishable
+		var count=0;
+		var colorArray = getRandomColor(v_max);
+		for(var i=0; i<h_max; i++) {
+			for(var j=0; j<v_max; j++) {
+				pads[count++].colour(colorArray[j].r, colorArray[j].g, colorArray[j].b);
+			}
 		}
+		//Start the pixel pads
 		for (var i=0; i<pads.length; ++i) { pads[i].pulse(); }
+		//Parse message from server (i.e. JSON array of values)
 		var obj = JSON.parse(data);
-		mapValues(pads, obj, pageCounter);
-		//Cycle through graph data
+		var obj_data = obj['Data'][1].RainfallVals;
+		var obj_headings = obj['Data'][0].Headings;
+		
+		var pagingLimit=obj_data.length;
+
+		mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max);
+		
+		//Page through graph data
 		$('button#previous').click(function() {
-			if(pageCounter>0) pageCounter--;
-			mapValues(pads, obj, pageCounter);
+			if(h_pageCounter>0) h_pageCounter--;
+			mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max);
 		});
 		$('button#next').click(function() {
-			if(pageCounter<10) pageCounter++;
-			mapValues(pads, obj, pageCounter);
+			if(h_pageCounter<pagingLimit) h_pageCounter++;
+			mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max);
 		});
 	});	
+	
 	//Test message from server (for handshake purposes)
 	conn.on("serverTestMsg", function(data) {
 		alert("Controller has sent a message: "+data);
 	});
+	
 	//The ShapeClips need to know the limits of black/white
 	conn.on("calibrationRequest", function(data) {
 		for (var i=0; i<pads.length; ++i) { pads[i].stopPulse(); }
