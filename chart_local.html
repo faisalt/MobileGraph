@@ -18,9 +18,11 @@
 	</div>
 	<div class="PXGrid"></div>
 	<div class="buttons">
-		<button id="previous">Prev</button>
-		<button id="next">Next</button>
-		<button onclick="location.reload();" id="refresh">Refresh</button>
+		<input type="image" id="up" onclick="return false" src="images/up.png"></input>
+		<input type="image" id="down" onclick="return false" src="images/down.png"></input>
+		<input type="image" id="previous" onclick="return false" src="images/left.png"></input>
+		<input type="image" id="next" onclick="return false" src="images/right.png"></input>
+		<input type="image" onclick="location.reload();" id="refresh" src="images/reload.png"></input>
 	</div>
 </body>
 </html>
@@ -36,9 +38,9 @@ $(document).ready(function() {
 		//conn = io.connect('ws://'+host+':'+port+'/');
 		conn = io.connect('ws://localhost:'+port+'/');
 			createGrid();
-			//generateHorizontalLabels();
-			//generateVerticalLabels();
-	});
+			generateVerticalLabels();
+			generateHorizontalLabels();
+		});
 	//});
 });
 
@@ -101,23 +103,39 @@ function createGrid() {
 		}
 		//Start the pixel pads
 		for (var i=0; i<pads.length; ++i) { pads[i].pulse(); }
+		
 		//Parse message from server (i.e. JSON array of values)
 		var obj = JSON.parse(data);
 		var obj_data = obj['Data'][1].RainfallVals;
 		var obj_headings = obj['Data'][0].Headings;
 		
-		var pagingLimit=obj_data.length;
-
-		mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max);
+		var pagingLimit=obj_data.length-h_max; //data limit across minus how many there are on the grid
+		var v_pagingLimit=obj_headings.length-v_max; //data limit up-down minus how may there are on the grid
 		
-		//Page through graph data
-		$('button#previous').click(function() {
+		/*
+		* ___TO FIX: repetitive calls to mapValues() is inefficient, should think of a better way___
+		*/
+		mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max, obj_headings);
+		
+		/* 
+		* Button handlers to navigate through graph data - horizontally and vertically 
+		* as not everything will fit in a 6x5 grid
+		*/
+		$('input#previous').click(function() {
 			if(h_pageCounter>0) h_pageCounter--;
-			mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max);
+			mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max, obj_headings);
 		});
-		$('button#next').click(function() {
+		$('input#next').click(function() {
 			if(h_pageCounter<pagingLimit) h_pageCounter++;
-			mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max);
+			mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max, obj_headings);
+		});
+		$('input#up').click(function() {
+			if(v_pageCounter>0) v_pageCounter--;
+			mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max, obj_headings);
+		});
+		$('input#down').click(function() {
+			if(v_pageCounter<v_pagingLimit) v_pageCounter++;
+			mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max, obj_headings);
 		});
 	});	
 	
@@ -148,16 +166,19 @@ function createGrid() {
 * @param h_limit
 * @param v_limit
 */
-function mapValues(pads, values, h_pagination, v_pagination, h_limit, v_limit) {
+function mapValues(pads, values, h_pagination, v_pagination, h_limit, v_limit, v_labels) {
 	var count=0;
-	var yearArray = new Array();
-	//generateVerticalLabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']);
+	var x_axis = new Array();
+	var y_axis = new Array();
 	for(var i=h_pagination; i<h_pagination+h_limit; i++) {
 		for(var j=v_pagination+1; j<(v_pagination+1)+v_limit; j++) {
 			pads[count++].height(values[i][j]*0.01);
 		}
 	}
-	//generateHorizontalLabels(yearArray);
+	for(var i=h_pagination; i<h_pagination+h_limit; i++) { x_axis.push(values[i][0]); } //the first value in the json array is the horizontal axis labels
+	for(var j=v_pagination+1; j<(v_pagination+1)+v_limit; j++) { y_axis.push(v_labels[j]); } //cycle through the vertical labels based on navigation value
+	generateVerticalLabels(y_axis);
+	generateHorizontalLabels(x_axis);
 }
 
 /*
@@ -167,7 +188,7 @@ function mapValues(pads, values, h_pagination, v_pagination, h_limit, v_limit) {
 */
 function generateHorizontalLabels(data) {
 	$('div.horizontal_axis').empty();
-	for(var i=0; i<5; i++) { 
+	for(var i=0; i<h_max; i++) { 
 		if(data == null) $('div.horizontal_axis').append("<label id='val"+i+"'>Val_"+i+"</label>"); 
 		else {
 			$('div.horizontal_axis').append("<label id='val"+i+"'>"+data[i]+"</label>");
@@ -182,7 +203,7 @@ function generateHorizontalLabels(data) {
 */
 function generateVerticalLabels(data) {
 	$('div.vertical_axis').empty();
-	for(var i=0; i<6; i++) { 
+	for(var i=0; i<v_max; i++) { 
 		if(data == null) $('div.vertical_axis').append("<label id='val1'>Val_"+i+"</label>"); 
 		else {
 			$('div.vertical_axis').append("<label id='val1'>"+data[i]+"</label>"); 
