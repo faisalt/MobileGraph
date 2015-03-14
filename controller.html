@@ -42,15 +42,10 @@
 </html>
 
 <script type="text/javascript">
-
-var conn="";
-/*
-* When document loads, make sure to load the config script, followed by the socket.js script. 
-* Once this is completed, run socket based code, otherwise it won't work.
-*/
-$(document).ready(function() {	
+var conn = "" ;
+$(document).ready(function() {
 	$.getScript('config.js').done(function(script, textStatus){
-		$.getScript('http://'+host+':'+port+'/socket.io/socket.io.js').done(function(script, textStatus){ 
+		$.getScript('http://'+host+':'+port+'/socket.io/socket.io.js').done(function(script, textStatus){ 	
 			conn = io.connect('ws://'+host+':'+port+'/');
 			conn.on('connect', function(data) {
 				console.log("Controller Connection Established!");
@@ -68,12 +63,11 @@ $(document).ready(function() {
 			$('button#allWhite').click(function() {
 				conn.emit("requestingAllWhite", "white");
 			});
-			
 			rainfallParser();
-		});		
-	});	
+		});
+	});
 });
-//Send data to the server, e.g. to be sent to clients
+
 function sendRequest(data) {
 	var strJSON = [{"pixel_id": "1", "pixel_value":"10"}, {"pixel_id":"2", "pixel_value":"20"}, {"pixel_id":"4", "pixel_value":"100"},{"pixel_id":"5", "pixel_value":"100"}];
 	var mydata = JSON.stringify(strJSON);
@@ -111,11 +105,12 @@ function rainfallParser() {
 				var csvval=e.target.result.split("\n"); //split CSV into rows
 				//cycle through CSV rows - row with index 0 consists of the months
 				var months_unprocessed=csvval[0].split(" ");
-				
+				var monthCount=0;
 				//remove blank values from array and put into new array
 				for(var i=0; i<months_unprocessed.length; i++) {
 					if(months_unprocessed[i] != "" && months_unprocessed[i] != "Year") {
-						months.push(months_unprocessed[i]);
+						if(monthCount < 12)	months.push('"'+months_unprocessed[i]+'"');
+						monthCount++;
 					}
 				}
 				//Process the rainfall data
@@ -135,20 +130,26 @@ function rainfallParser() {
 				}
 				var maxValue = Math.max.apply(Math, tempArray)
 				
-				//Insert values into JSON string
-				JSONdataString+='{"RainfallVals": [';
+				/*
+				* ---------------------------------------
+				* ------- JSON starts here --------------
+				* ---------------------------------------
+				* Insert values into JSON string
+				* ---------------------------------------
+				*/
+				JSONdataString+='{"Data":[{"Headings":['+months+']},{"RainfallVals": [';
 				for(var i=0; i<processedRainfallVals.length; i++) {
-					JSONdataString+='{"Year":"'+processedRainfallVals[i][0]+'",';
+					JSONdataString+='['+processedRainfallVals[i][0]+',';
 					for(var j=1; j<13; j++) {
 						//scale the values as the max height is represented by 100
 						var scaledValue = ((processedRainfallVals[i][j]*100)/maxValue)
-						JSONdataString+='"'+months[j-1]+'":"'+scaledValue.toFixed(2)+'"';
+						JSONdataString+=scaledValue.toFixed(2);
 						if(j!=12) JSONdataString+= ',';
 					}
-					JSONdataString+='}';
+					JSONdataString+=']';
 					if(i != processedRainfallVals.length-1) JSONdataString+=',';
 				}
-				JSONdataString+=']}';
+				JSONdataString+=']}]}';
 				console.log(JSONdataString);
 				sendRequest(JSONdataString);
 			};
