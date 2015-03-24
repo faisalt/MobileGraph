@@ -56,11 +56,12 @@ var pads = [];
 $(document).ready(function() {
 	$.getScript('config.js').done(function(script, textStatus){
 		//$.getScript('http://'+host+':'+port+'/socket.io/socket.io.js').done(function(script, textStatus){ 
-		conn = io.connect('ws://'+host+':'+port+'/');
+			//conn = io.connect('ws://'+host+':'+port+'/');
+			conn = io.connect('ws://localhost:3000/');
 			createGrid();
 			addMenuButtonHandlers();
-			//generateVerticalLabels();
-			//generateHorizontalLabels();
+			generateVerticalLabels();
+			generateHorizontalLabels();
 		});
 	//});
 });
@@ -101,21 +102,15 @@ function addMenuButtonHandlers() {
 	});
 }
 
-var chartData=""
-function setData(data) {
-	chartData=data;
-}
-function getData() {
-	if(chartData != "")	return chartData;
-}
-
 function generateDataWithControls(data) {
 	//Set unique colours for each row so they are distinguishable
 	var count=0;
-	var colorArray = getRandomColor(v_max);
+	//var colorArray = getRandomColor(v_max);
+	var colorArray=colors;
 	for(var i=0; i<h_max; i++) {
 		for(var j=0; j<v_max; j++) {
-			pads[count++].colour(colorArray[j].r, colorArray[j].g, colorArray[j].b);
+			pads[count++].colour(colorArray[j]);
+			//pads[count++].colour(0, 0, 255);
 		}
 	}
 	//Start the pixel pads
@@ -176,8 +171,8 @@ function createGrid() {
 	// The starting position of the grid
 	var X = 19;	var Y = 25;
 	
-	for (var x = 0; x < 5; ++x) {
-		for (var y = 0; y < 6; ++y) {
+	for (var x = 0; x < h_max; ++x) {
+		for (var y = 0; y < v_max; ++y) {
 			var pX = X + (x * 25); // 29 -- horizontal spacing between pixels
 			var pY = Y + (y * 26); // 33 -- vertical spacing between pixels
 			
@@ -189,6 +184,7 @@ function createGrid() {
 			count++;
 			pad.outline(true);
 			pad.rotate(180);
+			pad.PULSE_WIDTH=OVERRIDE_PULSE_WIDTH;
 			pads.push(pad);
 		}
 	}
@@ -242,7 +238,7 @@ function mapValues(pads, values, h_pagination, v_pagination, h_limit, v_limit, v
 		}
 	}
 	for(var i=h_pagination; i<h_pagination+h_limit; i++) { x_axis.push(values[i][0]); } //the first value in the json array is the horizontal axis labels
-	for(var j=v_pagination+1; j<(v_pagination+1)+v_limit; j++) { y_axis.push(v_labels[j]); } //cycle through the vertical labels based on navigation value
+	for(var j=v_pagination; j<(v_pagination+1)+v_limit; j++) { y_axis.push(v_labels[j]); } //cycle through the vertical labels based on navigation value
 	generateVerticalLabels(y_axis);
 	generateHorizontalLabels(x_axis);
 }
