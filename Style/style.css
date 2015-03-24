@@ -71,6 +71,30 @@ td.hslpixel {
 	padding-right:20px;
 	border-radius:15px;
 	background:white;
+	height:70px;
+}
+
+button#backButton {
+	position: absolute;
+	height: 80px;
+	width: 80px;
+	line-height: 20px;
+	bottom: 20px;
+	text-align: center;
+	margin: 0 auto;
+	left: 10%;
+	padding-bottom:30px;
+	font-weight:bold;
+	font-family: cursive;
+	padding-left: 20px;
+	padding-right: 20px;
+	border-radius: 50px;
+	border: 3px solid darkgray;
+	background: white;
+	font-size: 6em;
+}
+button#backButton:active {
+	background: lightgray;
 }
 
 input#previous {
@@ -83,10 +107,12 @@ input#next, input#previous, input#up, input#down {
 	top:15px;
 	margin-right:15px;
 }
-
+input#next:active, input#previous:active, input#up:active, input#down:active {
+background:lightgray;
+}
 
 .buttons button {
-	margin-right:10px;
+	/*margin-right:10px;
 	font-size:34px;
 	font-family:Arial;
 	font-weight:normal;
@@ -106,7 +132,41 @@ input#next, input#previous, input#up, input#down {
 	text-shadow:1px 1px 0px #ffffff;
  	-webkit-box-shadow:inset 1px 1px 0px 0px #ffffff;
  	-moz-box-shadow:inset 1px 1px 0px 0px #ffffff;
- 	box-shadow:inset 1px 1px 0px 0px #ffffff;
+ 	box-shadow:inset 1px 1px 0px 0px #ffffff;*/
+}
+
+.buttons #testData {
+	height: 56px;
+	padding-right: 20px;
+	padding-left: 20px;
+	border-radius: 10px;
+	border: none;
+	border: 3px solid lightgray;
+	font-size: 1.5em;
+	background: white;
+	position:relative;
+	bottom:5px;
+}
+
+.buttons #testData:active {
+	background:lightgray;
+}
+
+.buttons #calibrate, #controls, #calibrateBlack, #calibrateWhite{
+	height: 56px;
+	padding-right: 20px;
+	padding-left: 20px;
+	border-radius: 10px;
+	border: none;
+	border: 3px solid lightgray;
+	font-size: 1.5em;
+	margin-right: 20px;
+	background: white;
+}
+
+.buttons #calibrate:active, #controls:active, #calibrateBlack:active, #calibrateWhite:active{
+	background: darkred;
+	color:white;
 }
 
 .headerSegment {
@@ -122,8 +182,6 @@ input#next, input#previous, input#up, input#down {
 	color:white;
 	font-size:2.0em;
 }
-
-
 
 .calibutton {
 	margin-right:10px;
