@@ -10,6 +10,7 @@
 	<meta name="HandheldFriendly" content="true" />
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 	<script type="text/javascript" src="JavaScript/ShapeClipAPI.js"></script>
+	<script src="JavaScript/MobileGraph.js"></script>
 	<script src="http://localhost:3000/socket.io/socket.io.js"></script>
 	<script type="text/javascript" src="JSONexamples/rainfalldata.js"></script>
 	<link rel=StyleSheet href="Style/style.css" type="text/css">
@@ -271,46 +272,5 @@ function generateVerticalLabels(data) {
 			$('div.vertical_axis').append("<label id='val1'>"+data[i]+"</label>"); 
 		}
 	}
-}
-
-/*
-* Generate a random and unique RGB colour array
-*
-* @param rownum the number of rows that need random colours (each row is a different colour)
-*/
-function getRandomColor(rownum) {
-	var colorarray = new Array();
-	var count=0;
-	var tempColor="";
-	while(count < rownum) {
-		for(var i=0; i<rownum; i++) {
-			var letters = '0123456789ABCDEF'.split('');
-			var color = '#';
-			for (var i = 0; i < 6; i++ ) {
-				color += letters[Math.floor(Math.random() * 16)];
-			}
-			color = hexToRgb(color);
-			if(color != tempColor) {
-				colorarray.push(color);
-				count++;
-			}
-			tempColor = color;
-		}
-	}
-    return colorarray;
-}
-
-/*
-* Convert a hexadecmial value to an RGB array
-*
-* @param hex the hexadecmial value
-*/
-function hexToRgb(hex) {
-    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-    } : null;
 }
 </script>
