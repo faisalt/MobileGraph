@@ -100,56 +100,6 @@ function addMenuButtonHandlers() {
 		for (var i=0; i<pads.length; ++i) { pads[i]._ldr1(1);pads[i]._ldr2(1); }
 	});
 }
-
-function generateDataWithControls(data) {
-	//Set unique colours for each row so they are distinguishable
-	var count=0;
-	//var colorArray = getRandomColor(v_max);
-	var colorArray=colors;
-	for(var i=0; i<h_max; i++) {
-		for(var j=0; j<v_max; j++) {
-			pads[count++].colour(colorArray[j]);
-			//pads[count++].colour(0, 0, 255);
-		}
-	}
-	//Start the pixel pads
-	for (var i=0; i<pads.length; ++i) { pads[i].pulse(); }
-	
-	//Parse message from server (i.e. JSON array of values)
-	var obj = JSON.parse(data);
-	var obj_data = obj['Data'][1].RainfallVals;
-	var obj_headings = obj['Data'][0].Headings;
-	
-	var pagingLimit=obj_data.length-h_max; //data limit across minus how many there are on the grid
-	var v_pagingLimit=obj_headings.length-v_max; //data limit up-down minus how may there are on the grid
-	
-	/*
-	* ___TO FIX: repetitive calls to mapValues() is inefficient, should think of a better way___
-	*/
-	mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max, obj_headings);
-	
-	/* 
-	* Button handlers to navigate through graph data - horizontally and vertically 
-	* as not everything will fit in a 6x5 grid
-	*/
-	$('input#previous').click(function() {
-		if(h_pageCounter>0) h_pageCounter--;
-		mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max, obj_headings);
-	});
-	$('input#next').click(function() {
-		if(h_pageCounter<pagingLimit) h_pageCounter++;
-		mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max, obj_headings);
-	});
-	$('input#up').click(function() {
-		if(v_pageCounter>0) v_pageCounter--;
-		mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max, obj_headings);
-	});
-	$('input#down').click(function() {
-		if(v_pageCounter<v_pagingLimit) v_pageCounter++;
-		mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max, obj_headings);
-	});
-}
-
 /*
 * This creates the pixel grid that controls the ShapeClips color and height
 */
@@ -214,6 +164,58 @@ function createGrid() {
 		else if(data == "black") {
 			for (var i=0; i<pads.length; ++i) { pads[i]._ldr1(0);pads[i]._ldr2(0); }
 		}
+	});
+}
+/*
+* Show data on the ShapeClip pixels and add button controls to navigate through the data
+*
+* @data - the data, in JSON format, to be parsed and displayed
+*/
+function generateDataWithControls(data) {
+	//Set unique colours for each row so they are distinguishable
+	var count=0;
+	//var colorArray = getRandomColor(v_max);
+	var colorArray=colors;
+	for(var i=0; i<h_max; i++) {
+		for(var j=0; j<v_max; j++) {
+			pads[count++].colour(colorArray[j]);
+		}
+	}
+	//Start the pixel pads
+	for (var i=0; i<pads.length; ++i) { pads[i].pulse(); }
+	
+	//Parse message from server (i.e. JSON array of values)
+	var obj = JSON.parse(data);
+	var obj_data = obj['Data'][1].RainfallVals;
+	var obj_headings = obj['Data'][0].Headings;
+	
+	var pagingLimit=obj_data.length-h_max; //data limit across minus how many there are on the grid
+	var v_pagingLimit=obj_headings.length-v_max; //data limit up-down minus how may there are on the grid
+	
+	/*
+	* ___TO FIX: repetitive calls to mapValues() is inefficient, should think of a better way___
+	*/
+	mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max, obj_headings);
+	
+	/* 
+	* Button handlers to navigate through graph data - horizontally and vertically 
+	* as not everything will fit in a 6x5 grid
+	*/
+	$('input#previous').click(function() {
+		if(h_pageCounter>0) h_pageCounter--;
+		mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max, obj_headings);
+	});
+	$('input#next').click(function() {
+		if(h_pageCounter<pagingLimit) h_pageCounter++;
+		mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max, obj_headings);
+	});
+	$('input#up').click(function() {
+		if(v_pageCounter>0) v_pageCounter--;
+		mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max, obj_headings);
+	});
+	$('input#down').click(function() {
+		if(v_pageCounter<v_pagingLimit) v_pageCounter++;
+		mapValues(pads, obj_data, h_pageCounter, v_pageCounter, h_max, v_max, obj_headings);
 	});
 }
 

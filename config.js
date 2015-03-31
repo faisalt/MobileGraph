@@ -6,7 +6,7 @@
 
 //Server socket connections setup
 var protocol="http://";
-var host="148.88.227.201";
+var host="148.88.227.217";
 var port="3000";
 
 //ShapeClip interface configuration
