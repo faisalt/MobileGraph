@@ -55,13 +55,13 @@ var pads = [];
 
 $(document).ready(function() {
 	$.getScript('config.js').done(function(script, textStatus){
-		$.getScript('http://'+host+':'+port+'/socket.io/socket.io.js').done(function(script, textStatus){ 
-		conn = io.connect('ws://'+host+':'+port+'/');
+		//$.getScript('http://'+host+':'+port+'/socket.io/socket.io.js').done(function(script, textStatus){ 
+		//conn = io.connect('ws://'+host+':'+port+'/');
 			createGrid();
 			addMenuButtonHandlers();
 			generateVerticalLabels();
 			generateHorizontalLabels();
-		});
+		//});
 	});
 });
 
@@ -118,11 +118,12 @@ function createGrid() {
 	// The size of the shape-clip pad in mm.
 	var SC_SIZE = __px(20);
 	// The starting position of the grid
-	var X = 19;	var Y = 25;
+	//var X = 19;	var Y = 25;
+	var X = 26;	var Y = 20;
 	
 	for (var x = 0; x < h_max; ++x) {
 		for (var y = 0; y < v_max; ++y) {
-			var pX = X + (x * 25); // 29 -- horizontal spacing between pixels
+			var pX = X + (x * 27.5); // 29 -- horizontal spacing between pixels	
 			var pY = Y + (y * 26); // 33 -- vertical spacing between pixels
 			
 			var pad = null;
@@ -142,6 +143,7 @@ function createGrid() {
 	* ----------- WebSocket handlers ------------------
 	* -------------------------------------------------
 	*/
+	/*
 	conn.on('connect', function(data) {
 		console.log("Chart Client Connection Established!");
 	});
@@ -153,7 +155,7 @@ function createGrid() {
 	//Test message from server (for handshake purposes)
 	conn.on("serverTestMsg", function(data) {
 		alert("Controller has sent a message: "+data);
-	});
+	})
 	
 	//The ShapeClips need to know the limits of black/white - handle requests from external controller
 	conn.on("calibrationRequest", function(data) {
@@ -164,7 +166,7 @@ function createGrid() {
 		else if(data == "black") {
 			for (var i=0; i<pads.length; ++i) { pads[i]._ldr1(0);pads[i]._ldr2(0); }
 		}
-	});
+	});;*/
 }
 /*
 * Show data on the ShapeClip pixels and add button controls to navigate through the data

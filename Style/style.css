@@ -250,13 +250,13 @@ input#refresh {
 
 .horizontal_axis {
 	position:absolute;
-	top:45px;
+	top:285px;
 	left:120px;
 	width:85%;
 }
 .vertical_axis {
 	position:absolute;
-	top:70px;
+	top:10px;
 	left:0%;
 	width:20px;
 }
