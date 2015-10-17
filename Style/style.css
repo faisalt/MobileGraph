@@ -250,8 +250,8 @@ input#refresh {
 
 .horizontal_axis {
 	position:absolute;
-	top:285px;
-	left:120px;
+	top:450px;
+	left:40px;
 	width:85%;
 }
 .vertical_axis {
@@ -270,8 +270,11 @@ input#refresh {
 }
 .horizontal_axis label {
 	color:white;
-	font-size:1.5em;
+	font-size:1.3em;
 	float:left;
-	margin-right:100px;
+	margin-right:-85px;
 	position:relative;
+	transform: rotate(-90deg);
+	text-align:right;
+	width:280px;
 }
